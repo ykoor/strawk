@@ -192,26 +192,16 @@ func (i *Interpreter) transformArrayLookupExpression(indicies []ast.Expression) 
 }
 
 func (i *Interpreter) lookupVar(varName ast.Expression) ast.Expression {
-	var id string
-	var index []ast.Expression
-	switch varName.(type) {
-	case *ast.Identifier:
-		id = varName.(*ast.Identifier).Value
-		index = nil
-	case *ast.ArrayIndexExpression:
-		id = varName.(*ast.ArrayIndexExpression).ArrayName
-		index = varName.(*ast.ArrayIndexExpression).IndexList
-	default:
-		panic("Unexpected expression type in lookupVar")
-	}
-	val, ok := i.Stack[len(i.Stack)-1].LocalVariables[id]
-	if ok {
+	id, index := i.parseVar(varName)
+
+	if val, ok := i.Stack[len(i.Stack)-1].LocalVariables[id]; ok {
 		return i.attemptArrayLookup(index, val)
 	}
-	val, ok = i.GlobalVariables[id]
-	if ok {
+
+	if val, ok := i.GlobalVariables[id]; ok {
 		return i.attemptArrayLookup(index, val)
 	}
+
 	return &ast.StringLiteral{Value: ""}
 }
 
